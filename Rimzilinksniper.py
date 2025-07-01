@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-import requests, time, os, re, random
-from bs4 import BeautifulSoup
+import os, re, time, random
+from googlesearch import search
 
-# Colors
 RED = "\033[91m"
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
@@ -10,20 +9,20 @@ BLUE = "\033[94m"
 CYAN = "\033[96m"
 RESET = "\033[0m"
 
-# Banner
-banner = f"""
-{RED} _____ _           _     _       _             
+def show_banner():
+    os.system("clear")
+    print(f"""{RED}
+ _____ _           _     _       _             
 |  __ (_)         | |   (_)     (_)            
 | |__) | _ __ ___ | |__  _ _ __  _ _ __   __ _ 
-|  ___/ | '__/ _ \\| '_ \\| | '_ \\| | '_ \\ / _` |
+|  ___/ | '__/ _ \| '_ \| | '_ \| | '_ \ / _` |
 | |   | | | | (_) | |_) | | | | | | | | | (_| |
-|_|   |_|_|  \\___/|_.__/|_|_| |_|_|_| |_|\\__, |
+|_|   |_|_|  \___/|_.__/|_|_| |_|_|_| |_|\__, |
                                           __/ |
                                          |___/ 
-{YELLOW}     WhatsApp & Telegram Group Finder - by RIMZI{RESET}
-"""
+{YELLOW}   WhatsApp & Telegram Group Finder - by RIMZI{RESET}
+""")
 
-# Random descriptions
 descriptions = [
     "🔥 Active Group - Join Fast!",
     "💬 Daily Discussions & Fun",
@@ -32,21 +31,14 @@ descriptions = [
     "✅ Verified & Active Group"
 ]
 
-# WhatsApp Group Search
-def search_whatsapp(topic):
+def find_whatsapp_groups(topic):
     print(f"\n{CYAN}Searching WhatsApp groups for:{RESET} {topic}\n")
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    url = f"https://html.duckduckgo.com/html/?q=site:chat.whatsapp.com+{topic}"
-    res = requests.get(url, headers=headers)
-    soup = BeautifulSoup(res.text, 'html.parser')
+    query = f"site:chat.whatsapp.com {topic}"
+    links = list(search(query, num_results=20))
     count = 0
-
-    for a in soup.find_all('a', href=True):
-        href = a['href']
-        match = re.search(r'uddg=(https?%3A%2F%2Fchat\.whatsapp\.com%2F[^\&]+)', href)
-        if match:
-            link = match.group(1).replace('%3A', ':').replace('%2F', '/')
-            gid = link.split('/')[-1]
+    for link in links:
+        if "chat.whatsapp.com" in link:
+            gid = link.split("/")[-1]
             desc = random.choice(descriptions)
             print(f"{YELLOW}╭──────────────[ ✅ SUCCESS ✅ ]──────────────╮")
             print(f"{GREEN} Group Name : {topic.title()} Group")
@@ -55,45 +47,54 @@ def search_whatsapp(topic):
             print(f" Description: {desc}")
             print(f"{YELLOW}╰────────────────────────────────────────────╯{RESET}\n")
             count += 1
-            time.sleep(0.2)
+            if count >= 10:
+                break
+            time.sleep(0.3)
     if count == 0:
         print(f"{RED}❌ No groups found.{RESET}")
 
-# Telegram Group Search
-def search_telegram(topic):
+def find_telegram_groups(topic):
     print(f"\n{CYAN}Searching Telegram groups for:{RESET} {topic}\n")
-    urls = [f"https://t.me/s/{topic}", f"https://t.me/{topic}"]
-    found = False
-    for url in urls:
-        try:
-            res = requests.get(url, timeout=5)
-            if res.status_code == 200:
-                desc = random.choice(descriptions)
-                print(f"{YELLOW}╭──────────────[ ✅ SUCCESS ✅ ]──────────────╮")
-                print(f"{GREEN} Group Name : {topic.title()} Channel/Group")
-                print(f" Link       : {url}")
-                print(f" Description: {desc}")
-                print(f"{YELLOW}╰────────────────────────────────────────────╯{RESET}\n")
-                found = True
+    query = f"site:t.me {topic}"
+    links = list(search(query, num_results=20))
+    count = 0
+    shown = set()
+    for link in links:
+        if "t.me/" in link and link not in shown:
+            shown.add(link)
+            name = link.split("/")[-1].replace("-", " ").title()
+            desc = random.choice(descriptions)
+            print(f"{YELLOW}╭──────────────[ ✅ SUCCESS ✅ ]──────────────╮")
+            print(f"{GREEN} Group Name : {name}")
+            print(f" Link       : {link}")
+            print(f" Description: {desc}")
+            print(f"{YELLOW}╰────────────────────────────────────────────╯{RESET}\n")
+            count += 1
+            if count >= 10:
                 break
-        except:
-            continue
-    if not found:
-        print(f"{RED}❌ Group not found on Telegram.{RESET}")
+            time.sleep(0.3)
+    if count == 0:
+        print(f"{RED}❌ No Telegram groups found.{RESET}")
 
-# Main
-os.system('clear')
-print(banner)
-print("\nChoose platform:")
-print(" [1] WhatsApp Group Finder")
-print(" [2] Telegram Group Finder")
-choice = input("\n>> ").strip()
+def main():
+    while True:
+        show_banner()
+        print(f"{CYAN}Select an option:{RESET}")
+        print(f"{GREEN}[1]{RESET} WhatsApp Group Finder")
+        print(f"{GREEN}[2]{RESET} Telegram Group Finder")
+        print(f"{GREEN}[0]{RESET} Exit")
+        choice = input(f"\n{BLUE}>> {RESET}").strip()
+        if choice == '1':
+            topic = input(f"\n📘 Enter topic to search: ").strip()
+            find_whatsapp_groups(topic)
+        elif choice == '2':
+            topic = input(f"\n📘 Enter topic to search: ").strip()
+            find_telegram_groups(topic)
+        elif choice == '0':
+            print(f"{YELLOW}Exiting... Bye!{RESET}")
+            break
+        else:
+            print(f"{RED}❌ Invalid option. Try again!{RESET}")
+        input(f"\n{BLUE}Press Enter to go back to main menu...{RESET}")
 
-if choice == '1':
-    topic = input("\n📘 Enter topic to search (e.g. PUBG, Girls, Crypto): ").strip()
-    search_whatsapp(topic)
-elif choice == '2':
-    topic = input("\n📘 Enter Telegram group name (e.g. CryptoNews, Termux): ").strip()
-    search_telegram(topic)
-else:
-    print(f"{RED}❌ Invalid option. Exiting...{RESET}")
+main()
